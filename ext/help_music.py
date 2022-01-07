@@ -48,9 +48,9 @@ class Help_Music(commands.Cog):
                 f"{', '.join(command.aliases)}" if len(command.aliases) > 0 else "None"
             )
             cog_help_embed.add_field(
-                name=(f"_{command.name} , {command_aliases}")
+                name=(f"1!{command.name} , {command_aliases}")
                 if (command_aliases != "None")
-                else (f"_{command.name}"),
+                else (f"1!{command.name}"),
                 value=f"`{command.help}`",
                 inline=False,
             )
