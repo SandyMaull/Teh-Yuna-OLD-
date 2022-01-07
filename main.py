@@ -1,10 +1,14 @@
 import discord
+import os
+from dotenv import load_dotenv
 from discord.ext import commands
 from ext import music
+from ext import help_music
 
-
+load_dotenv()
 music_cogs = [music]
-client = commands.Bot(command_prefix='?!', intents = discord.Intents.all())
+help_cogs = [help_music]
+client = commands.Bot(command_prefix=("1!", "-"), intents = discord.Intents.all(), help_command=None)
 
 @client.event
 async def on_ready():
@@ -14,4 +18,8 @@ async def on_ready():
 for i in range(len(music_cogs)):
     music_cogs[i].setup(client)
 
-client.run("OTI1MTcxODY0MjI4MjA0NTY1.YcpPcQ.uU9dBzdNM-jWKS5d2HeqdRH2TWU")
+for i in range(len(help_cogs)):
+    help_cogs[i].setup(client)
+
+
+client.run(os.getenv("TOKEN"))
