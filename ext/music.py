@@ -95,7 +95,7 @@ class Music(commands.Cog):
             else:
                 await self.vc.move_to(self.music_queue[0][1])
 
-            await ctx.send(
+            await ctx.reply(
                 f""":arrow_forward: Playing **{self.music_queue[0][0]['title']}** -- requested by {self.music_queue[0][2]}"""
             )
 
@@ -109,33 +109,26 @@ class Music(commands.Cog):
             self.is_playing = False
             self.current_song = None
 
-    @commands.command()
-    async def testpref(self, ctx, *args):
-        if ctx.prefix != '1!':
-            return
-            
-        await ctx.reply("Your Prefix is 1!")
-
     @commands.command(
         name="p",
         help="Plays a selected song from youtube.",
         aliases=["play"],
     )
     async def p(self, ctx, *args):
-        if ctx.prefix != "p!":
+        if ctx.prefix != '1!':
             return
         query = " ".join(args)
         voice_channel = ctx.author.voice.channel
         if voice_channel is None:
-            await ctx.send("Connect to a voice channel!")
+            await ctx.reply("Connect to a voice channel!")
         else:
             song = self.search_yt(query)
             if type(song) == type(True):
-                await ctx.send(
+                await ctx.reply(
                     "Could not download the song. Incorrect format try another keyword."
                 )
             else:
-                await ctx.send(
+                await ctx.reply(
                     f""":headphones: **{song["title"]}** has been added to the queue by {ctx.author.mention}"""
                 )
                 self.music_queue.append([song, voice_channel, ctx.author.mention])
@@ -148,12 +141,14 @@ class Music(commands.Cog):
         aliases=["playing"],
     )
     async def cp(self, ctx):
+        if ctx.prefix != '1!':
+            return
         msg = (
             "No music playing"
             if self.current_song is None
             else f"""Currently Playing: **{self.current_song[0]['title']}** -- added by {self.current_song[2]}\n"""
         )
-        await ctx.send(msg)
+        await ctx.reply(msg)
 
     @commands.command(
         name="q",
@@ -161,32 +156,40 @@ class Music(commands.Cog):
         aliases=["queue"],
     )
     async def q(self, ctx):
+        if ctx.prefix != '1!':
+            return
         print(self.music_queue)
         retval = ""
         for (i, m) in enumerate(self.music_queue):
             retval += f"""{i+1}. **{m[0]['title']}** -- added by {m[int(2)]}\n"""
 
         if retval != "":
-            await ctx.send(retval)
+            await ctx.reply(retval)
         else:
-            await ctx.send("No music in queue")
+            await ctx.reply("No music in queue")
 
     @commands.command(name="cq", help="Clears the queue.", aliases=["clear"])
     async def cq(self, ctx):
+        if ctx.prefix != '1!':
+            return
         self.music_queue = []
-        await ctx.send("""***Queue cleared !***""")
+        await ctx.reply("""***Queue cleared !***""")
 
     @commands.command(name="shuffle", help="Shuffles the queue.")
     async def shuffle(self, ctx):
+        if ctx.prefix != '1!':
+            return
         shuffle(self.music_queue)
-        await ctx.send("""***Queue shuffled !***""")
+        await ctx.reply("""***Queue shuffled !***""")
 
     @commands.command(
         name="s", help="Skips the current song being played.", aliases=["skip"]
     )
     async def skip(self, ctx):
+        if ctx.prefix != '1!':
+            return
         if self.vc != "" and self.vc:
-            await ctx.send("""***Skipped current song !***""")
+            await ctx.reply("""***Skipped current song !***""")
             self.skip_votes = set()
             self.vc.stop()
             await self.play_music(ctx)
@@ -197,13 +200,15 @@ class Music(commands.Cog):
         aliases=["vs"],
     )
     async def voteskip(self, ctx):
+        if ctx.prefix != '1!':
+            return
         if ctx.voice_client is None:
             return
         num_members = len(ctx.voice_client.channel.members) - 1
         self.skip_votes.add(ctx.author.id)
         votes = len(self.skip_votes)
         if votes >= num_members / 2:
-            await ctx.send(f"Vote passed by majority ({votes}/{num_members}).")
+            await ctx.reply(f"Vote passed by majority ({votes}/{num_members}).")
             await self.skip(ctx)
 
     @commands.command(
@@ -212,27 +217,31 @@ class Music(commands.Cog):
         aliases=["leave"],
     )
     async def leave(self, ctx, *args):
+        if ctx.prefix != '1!':
+            return
         if self.vc.is_connected():
-            await ctx.send("""**Bye Bye **:slight_smile:""")
+            await ctx.reply("""**Bye Bye **:slight_smile:""")
             await self.vc.disconnect(force=True)
 
     @commands.command(
         name="pn", help="Moves the song to the top of the queue."
     )
     async def playnext(self, ctx, *args):
+        if ctx.prefix != '1!':
+            return
         query = " ".join(args)
 
         voice_channel = ctx.author.voice.channel
         if voice_channel is None:
-            await ctx.send("Connect to a voice channel")
+            await ctx.reply("Connect to a voice channel")
         else:
             song = self.search_yt(query)
             if type(song) == type(True):
-                await ctx.send(
+                await ctx.reply(
                     "Could not download the song. Incorrect format try another keyword."
                 )
             else:
-                vote_message = await ctx.send(
+                vote_message = await ctx.reply(
                     f":headphones: **{song['title']}** will be added to the top of the queue by {ctx.author.mention}\n"
                     "You have 30 seconds to vote by reacting :+1: on this message.\n"
                     "If more than 50% of the people in your channel agree, the request will be up next!"
@@ -254,12 +263,12 @@ class Music(commands.Cog):
                     self.music_queue.insert(
                         0, [song, voice_channel, ctx.author.mention]
                     )
-                    await ctx.send(
+                    await ctx.reply(
                         f":headphones: **{song['title']}** will be added played next!"
                     )
                 else:
                     self.music_queue.append([song, voice_channel, ctx.author.mention])
-                    await ctx.send(
+                    await ctx.reply(
                         f":headphones: **{song['title']}** will be played add the end of the queue!"
                     )
 
@@ -272,29 +281,33 @@ class Music(commands.Cog):
 
     @commands.command(name="pause", help="Pause the currently playing song.")
     async def pause(self, ctx):
+        if ctx.prefix != '1!':
+            return
         vc = ctx.voice_client
 
         if not vc or not vc.is_playing():
-            return await ctx.send("I am currently playing nothing!", delete_after=20)
+            return await ctx.reply("I am currently playing nothing!", delete_after=20)
         elif vc.is_paused():
             return
 
         vc.pause()
-        await ctx.send(f":pause_button:  {ctx.author.mention} Paused the song!")
+        await ctx.reply(f":pause_button:  {ctx.author.mention} Paused the song!")
 
     """Resume the currently playing song."""
 
     @commands.command(name="resume", help="Resume the currently playing song.")
     async def resume(self, ctx):
+        if ctx.prefix != '1!':
+            return
         vc = ctx.voice_client
 
         if not vc or vc.is_playing():
-            return await ctx.send("I am already playing a song!", delete_after=20)
+            return await ctx.reply("I am already playing a song!", delete_after=20)
         elif not vc.is_paused():
             return
 
         vc.resume()
-        await ctx.send(f":play_pause:  {ctx.author.mention} Resumed the song!")
+        await ctx.reply(f":play_pause:  {ctx.author.mention} Resumed the song!")
 
     @commands.command(
         name="r",
@@ -302,6 +315,13 @@ class Music(commands.Cog):
         aliases=["remove"],
     )
     async def remove(self, ctx, *args):
+        if ctx.prefix != '1!':
+            return
+
+        if len(args) == 0:
+            await ctx.reply("Wrong Parameters. See `1!help`.")
+            return
+
         query = "".join(*args)
         index = 0
         negative = True if (query[0] == "-") else False
@@ -312,11 +332,11 @@ class Music(commands.Cog):
         index -= 1
 
         if negative:
-            await ctx.send("Index cannot be less than one")
+            await ctx.reply("Index cannot be less than one")
         elif index >= len(self.music_queue):
-            await ctx.send("Wrong index. Indexed music not present in the queue")
+            await ctx.reply("Wrong index. Indexed music not present in the queue")
         else:
-            await ctx.send(
+            await ctx.reply(
                 f""":x: Music at index {query} removed by {ctx.author.mention}"""
             )
             self.music_queue.pop(index)
@@ -327,6 +347,8 @@ class Music(commands.Cog):
         aliases=["restart"],
     )
     async def restart(self, ctx):
+        if ctx.prefix != '1!':
+            return
         song = []
         if self.current_song != None:
             song = self.current_song[0]
@@ -340,11 +362,11 @@ class Music(commands.Cog):
 
                 if self.vc == "" or not self.vc.is_connected() or self.vc == None:
                     self.vc = await self.music_queue[0][1].connect()
-                    await ctx.send("No music added")
+                    await ctx.reply("No music added")
                 else:
                     await self.vc.move_to(self.music_queue[0][1])
 
-                    await ctx.send(
+                    await ctx.reply(
                         f""":repeat: Replaying **{self.music_queue[0][0]['title']}** -- requested by {self.music_queue[0][2]}"""
                     )
 
@@ -357,7 +379,7 @@ class Music(commands.Cog):
         else:
             self.is_playing = False
             self.current_song = None
-            await ctx.send(f""":x: No music playing""")
+            await ctx.reply(f""":x: No music playing""")
 
     @commands.command(
         name="qt",
@@ -365,6 +387,8 @@ class Music(commands.Cog):
         aliases=["queuetime"],
     )
     async def qt(self, ctx):
+        if ctx.prefix != '1!':
+            return
         remaining_time = 0
         for song in self.music_queue:
             remaining_time += song[0]["song_length"]
@@ -373,16 +397,18 @@ class Music(commands.Cog):
         remaining_time = str(remaining_time % 60)
         remaining_time = f"{remaining_time_minutes}:{remaining_time}"
 
-        await ctx.send(f"""The queue has a total of {remaining_time} remaining!""")
+        await ctx.reply(f"""The queue has a total of {remaining_time} remaining!""")
 
     @commands.command(
         name="sleep", help="Sets the bot to sleep.", aliases=["timer"]
     )
     async def sleep(self, ctx, *args):
+        if ctx.prefix != '1!':
+            return
         second = int(0)
         query = list(args)
         if self.is_playing == False:
-            return await ctx.send(f"No music playing")
+            return await ctx.reply(f"No music playing")
 
         if len(query) == 0 and self.isTimed:
             self.isTimed = False
@@ -396,23 +422,23 @@ class Music(commands.Cog):
                 elif query[0] == "s":
                     second = int(query[1])
                 else:
-                    await ctx.send("Invalid time format.")
+                    await ctx.reply("Invalid time format.")
                     return
             except:
-                await ctx.send("Invalid time specified")
+                await ctx.reply("Invalid time specified")
                 return
         elif len(query) == 2 and self.isTimed:
-            await ctx.send("Timer already set. Unset to reset.")
+            await ctx.reply("Timer already set. Unset to reset.")
             return
         else:
-            await ctx.send("Invalid time format.")
+            await ctx.reply("Invalid time format.")
             return
         seconds = f"{second}"
         if second < 0:
-            await ctx.send("Time cannot be negative")
+            await ctx.reply("Time cannot be negative")
         else:
             self.isTimed = True
-            message = await ctx.send("Timer set for : " + seconds + " seconds.")
+            message = await ctx.reply("Timer set for : " + seconds + " seconds.")
             while True and self.isTimed:
                 second = second - 1
                 if second == 0:
@@ -422,9 +448,9 @@ class Music(commands.Cog):
                 await asyncio.sleep(1)
 
             if self.isTimed == False:
-                await ctx.send("Timer disabled.")
+                await ctx.reply("Timer disabled.")
             else:
-                await ctx.send(
+                await ctx.reply(
                     f""" **{ctx.message.author.mention} Sleep time exceeded! Bye-Bye!** :slight_smile: """
                 )
                 self.isTimed = False
